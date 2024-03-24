@@ -28,5 +28,10 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+    <!-- Url Lancher -->
+  <key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>https</string>
+  </array>
 </dict>
 </plist>
