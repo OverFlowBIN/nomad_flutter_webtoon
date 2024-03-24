@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_webtoon/models/webtoon_detail_model.dart';
+import 'package:flutter_webtoon/models/webtoon_episode_model.dart';
+import 'package:flutter_webtoon/services/api_service.dart';
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final String title, thumb, id;
   const DetailScreen({
     super.key,
@@ -8,6 +11,24 @@ class DetailScreen extends StatelessWidget {
     required this.thumb,
     required this.id,
   });
+
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  late Future<WebtoonDetailModel> webtoon;
+  late Future<List<WebtoonEpisodeModel>> episodes;
+
+  @override
+  void initState() {
+    // initState()는 State 객체가 생성된 후 호출되는 메서드입니다.
+    // initState()는 반드시 build() 메서드보다 먼저 호출되며, State 객체의 초기화 작업을 수행합니다.
+    // State 객체가 생성된 후 한 번만 호출되므로, 여기서 Future를 초기화하는 것이 좋습니다.
+    super.initState();
+    webtoon = ApiService.getToonById(widget.id);
+    episodes = ApiService.getLatestEpisodeById(widget.id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +39,7 @@ class DetailScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.green,
         title: Text(
-          title,
+          widget.title,
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -34,7 +55,7 @@ class DetailScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Hero(
-                tag: id,
+                tag: widget.id,
                 child: Container(
                   width: 300,
                   clipBehavior: Clip
@@ -51,7 +72,7 @@ class DetailScreen extends StatelessWidget {
                     ],
                   ),
                   child: Image.network(
-                    thumb,
+                    widget.thumb,
                     headers: const {
                       "User-Agent":
                           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
@@ -61,6 +82,40 @@ class DetailScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(
+            height: 20,
+          ),
+          FutureBuilder(
+            future: webtoon,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        snapshot.data!.about,
+                        style: const TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        '${snapshot.data!.genre} / ${snapshot.data!.age}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const Text("...");
+            },
+          )
         ],
       ),
     );
