@@ -7,7 +7,7 @@ class ApiService {
       'https://webtoon-crawler.nomadcoders.workers.dev';
   static const String today = 'today';
 
-  static Future<List<WebToonModel>> getTodaysToons() async {
+  Future<List<WebToonModel>> getTodaysToons() async {
     List<WebToonModel> webToonInstances = [];
     final url = Uri.parse('$baseUrl/$today');
 
