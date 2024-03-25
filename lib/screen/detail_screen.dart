@@ -3,7 +3,7 @@ import 'package:flutter_webtoon/models/webtoon_detail_model.dart';
 import 'package:flutter_webtoon/models/webtoon_episode_model.dart';
 import 'package:flutter_webtoon/services/api_service.dart';
 import 'package:flutter_webtoon/widgets/episode_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailScreen extends StatefulWidget {
   final String title, thumb, id;
@@ -21,6 +21,30 @@ class DetailScreen extends StatefulWidget {
 class _DetailScreenState extends State<DetailScreen> {
   late Future<WebtoonDetailModel> webtoon;
   late Future<List<WebtoonEpisodeModel>> episodes;
+  // 여기에 넣는 이유는 DetailScreen을 호출할 떄 poperty만 가지고오고,
+  // sharedPreference는 property와 관계 없이 사용하기 위해
+  late SharedPreferences prefs;
+  bool isLiked = false;
+
+  Future initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
+    final likedToons = prefs.getStringList('likedToons');
+    if (likedToons != null) {
+      if (likedToons.contains(widget.id)) {
+        // 좋아요를 누른 웹툰이라면
+        // setState()를 호출하여 화면을 다시 그립니다.
+        setState(() {
+          // 좋아요를 누른 웹툰이라면
+          // setState()를 호출하여 화면을 다시 그립니다.
+          // 만약 setState()를 호출하지 않으면 isLiked 값이 변경되어도 화면에 반영되지 않습니다.
+          isLiked = true;
+        });
+      }
+    } else {
+      // initState에서 await을 사용하면 build() 메서드가 호출되기 전에 Future가 완료된다.
+      await prefs.setStringList('likedToons', []);
+    }
+  }
 
   @override
   void initState() {
@@ -30,6 +54,20 @@ class _DetailScreenState extends State<DetailScreen> {
     super.initState();
     webtoon = ApiService.getToonById(widget.id);
     episodes = ApiService.getLatestEpisodeById(widget.id);
+    initPrefs();
+  }
+
+  void favoriteOnPressed() async {
+    final likedToons = prefs.getStringList('likedToons');
+    if (!isLiked) {
+      likedToons!.add(widget.id);
+    } else {
+      likedToons!.remove(widget.id);
+    }
+    await prefs.setStringList('likedToons', likedToons);
+    setState(() {
+      isLiked = !isLiked;
+    });
   }
 
   @override
@@ -47,6 +85,14 @@ class _DetailScreenState extends State<DetailScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: favoriteOnPressed,
+            icon: Icon(isLiked
+                ? Icons.favorite_outlined
+                : Icons.favorite_outline_outlined),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
